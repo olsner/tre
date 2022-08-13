@@ -1323,6 +1323,10 @@ main(int argc, char **argv)
   test_comp("\\x{}r", REG_EXTENDED, 0);
   test_nexec("\000r", 2, 0, REG_OK, 0, 2, END);
 
+  /* $ (end-of-line) should not match before an embedded NUL */
+  test_comp("$", REG_EXTENDED, 0);
+  test_nexec("a\000b", 3, 0, REG_OK, 3, 3, END);
+
   /* Tests for (?inrU-inrU) and (?inrU-inrU:) */
   test_comp("foo(?i)bar", REG_EXTENDED, 0);
   test_exec("fooBaR", 0, REG_OK, 0, 6, END);

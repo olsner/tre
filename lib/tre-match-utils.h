@@ -8,15 +8,7 @@
 
 #define str_source ((const tre_str_source*)string)
 
-#ifdef TRE_WCHAR
-
-#ifdef TRE_MULTIBYTE
-
-/* Wide character and multibyte support. */
-
-#define GET_NEXT_WCHAR()						      \
-  do {									      \
-    prev_c = next_c;							      \
+#define GET_NEXT_IF_BYTE() \
     if (type == STR_BYTE)						      \
       {									      \
 	pos++;								      \
@@ -24,18 +16,22 @@
 	  next_c = '\0';						      \
 	else								      \
 	  next_c = (unsigned char)(*str_byte++);			      \
-      }									      \
-    else if (type == STR_WIDE)						      \
+      }
+
+#define GET_NEXT_IF_WIDE() \
+    if (type == STR_WIDE)						      \
       {									      \
 	pos++;								      \
 	if (len >= 0 && pos >= len)					      \
 	  next_c = L'\0';						      \
 	else								      \
 	  next_c = *str_wide++;						      \
-      }									      \
-    else if (type == STR_MBS)						      \
+      }
+
+#define GET_NEXT_IF_MBS() \
+      if (type == STR_MBS)						      \
       {									      \
-        pos += pos_add_next;					      	      \
+        pos += pos_add_next;						      \
 	if (str_byte == NULL)						      \
 	  next_c = L'\0';						      \
 	else								      \
@@ -70,12 +66,28 @@
 	      }								      \
 	  }								      \
       }									      \
-    else if (type == STR_USER)						      \
+
+#define GET_NEXT_IF_USER() \
+    if (type == STR_USER)						      \
       {									      \
-        pos += pos_add_next;					      	      \
+        pos += pos_add_next;						      \
 	str_user_end = str_source->get_next_char(&next_c, &pos_add_next,      \
                                                  str_source->context);	      \
-      }									      \
+      }
+
+#ifdef TRE_WCHAR
+
+#ifdef TRE_MULTIBYTE
+
+/* Wide character and multibyte support. */
+
+#define GET_NEXT_WCHAR()						      \
+  do {									      \
+    prev_c = next_c;							      \
+    GET_NEXT_IF_BYTE()							      \
+    else GET_NEXT_IF_WIDE()						      \
+    else GET_NEXT_IF_USER()						      \
+    else GET_NEXT_IF_MBS()						      \
   } while(/*CONSTCOND*/(void)0,0)
 
 #else /* !TRE_MULTIBYTE */
@@ -85,28 +97,9 @@
 #define GET_NEXT_WCHAR()						      \
   do {									      \
     prev_c = next_c;							      \
-    if (type == STR_BYTE)						      \
-      {									      \
-	pos++;								      \
-	if (len >= 0 && pos >= len)					      \
-	  next_c = '\0';						      \
-	else								      \
-	  next_c = (unsigned char)(*str_byte++);			      \
-      }									      \
-    else if (type == STR_WIDE)						      \
-      {									      \
-	pos++;								      \
-	if (len >= 0 && pos >= len)					      \
-	  next_c = L'\0';						      \
-	else								      \
-	  next_c = *str_wide++;						      \
-      }									      \
-    else if (type == STR_USER)						      \
-      {									      \
-        pos += pos_add_next;					      	      \
-	str_user_end = str_source->get_next_char(&next_c, &pos_add_next,      \
-                                                 str_source->context);	      \
-      }									      \
+    GET_NEXT_IF_BYTE()							      \
+    else GET_NEXT_IF_WIDE()						      \
+    else GET_NEXT_IF_USER()						      \
   } while(/*CONSTCOND*/(void)0,0)
 
 #endif /* !TRE_MULTIBYTE */
@@ -118,20 +111,8 @@
 #define GET_NEXT_WCHAR()						      \
   do {									      \
     prev_c = next_c;							      \
-    if (type == STR_BYTE)						      \
-      {									      \
-	pos++;								      \
-	if (len >= 0 && pos >= len)					      \
-	  next_c = '\0';						      \
-	else								      \
-	  next_c = (unsigned char)(*str_byte++);			      \
-      }									      \
-    else if (type == STR_USER)						      \
-      {									      \
-	pos += pos_add_next;						      \
-	str_user_end = str_source->get_next_char(&next_c, &pos_add_next,      \
-						 str_source->context);	      \
-      }									      \
+    GET_NEXT_IF_BYTE()							      \
+    else GET_NEXT_IF_USER()						      \
   } while(/*CONSTCOND*/(void)0,0)
 
 #endif /* !TRE_WCHAR */
@@ -139,23 +120,24 @@
 
 
 #define IS_WORD_CHAR(c)	 ((c) == L'_' || tre_isalnum(c))
+#define END_OF_STRING (str_user_end || (len < 0 ? next_c == 0 : pos >= len))
 
 #define CHECK_ASSERTIONS(assertions)					      \
   (((assertions & ASSERT_AT_BOL)					      \
     && (pos > 0 || reg_notbol)						      \
     && (prev_c != L'\n' || !reg_newline))				      \
    || ((assertions & ASSERT_AT_EOL)					      \
-       && (next_c != L'\0' || reg_noteol)				      \
+       && (!END_OF_STRING || reg_noteol)				      \
        && (next_c != L'\n' || !reg_newline))				      \
    || ((assertions & ASSERT_AT_BOW)					      \
        && (IS_WORD_CHAR(prev_c) || !IS_WORD_CHAR(next_c)))	              \
    || ((assertions & ASSERT_AT_EOW)					      \
        && (!IS_WORD_CHAR(prev_c) || IS_WORD_CHAR(next_c)))		      \
    || ((assertions & ASSERT_AT_WB)					      \
-       && (pos != 0 && next_c != L'\0'					      \
+       && (pos != 0 && !END_OF_STRING					      \
 	   && IS_WORD_CHAR(prev_c) == IS_WORD_CHAR(next_c)))		      \
    || ((assertions & ASSERT_AT_WB_NEG)					      \
-       && (pos == 0 || next_c == L'\0'					      \
+       && (pos == 0 || END_OF_STRING					      \
 	   || IS_WORD_CHAR(prev_c) != IS_WORD_CHAR(next_c))))
 
 #define CHECK_CHAR_CLASSES(trans_i, tnfa, eflags)                             \

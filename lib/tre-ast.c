@@ -208,7 +208,7 @@ tre_do_print(FILE *stream, tre_ast_node_t *ast, int indent)
     }
 }
 
-static void
+void
 tre_ast_fprint(FILE *stream, tre_ast_node_t *ast)
 {
   tre_do_print(stream, ast, 0);

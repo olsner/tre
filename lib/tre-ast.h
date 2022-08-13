@@ -116,6 +116,9 @@ tre_ast_new_catenation(tre_mem_t mem, tre_ast_node_t *left,
 
 #ifdef TRE_DEBUG
 void
+tre_ast_fprint(FILE* fp, tre_ast_node_t *tree);
+
+void
 tre_ast_print(tre_ast_node_t *tree);
 
 /* XXX - rethink AST printing API */

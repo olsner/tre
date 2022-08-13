@@ -565,7 +565,7 @@ tre_parse_bracket(tre_parse_ctx_t *ctx, tre_ast_node_t **result)
     goto parse_bracket_done;
 
 #ifdef TRE_DEBUG
-  tre_ast_print(node);
+  tre_ast_fprint(stderr, node);
 #endif /* TRE_DEBUG */
 
  parse_bracket_done:

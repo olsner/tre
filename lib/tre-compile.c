@@ -1040,7 +1040,7 @@ tre_expand_ast(tre_mem_t mem, tre_stack_t *stack, tre_ast_node_t *ast,
 
 #ifdef TRE_DEBUG
   DPRINT(("Expanded AST:\n"));
-  tre_ast_print(ast);
+  tre_ast_fprint(stderr, ast);
   DPRINT(("*position %d, max_pos %d\n", *position, max_pos));
 #endif
 
@@ -1905,7 +1905,7 @@ tre_compile(regex_t *preg, const tre_char_t *regex, size_t n, int cflags)
     ERROR_EXIT(REG_BADPAT);
 
 #ifdef TRE_DEBUG
-  tre_ast_print(tree);
+  tre_ast_fprint(stderr, tree);
 #endif /* TRE_DEBUG */
 
   /* Referring to nonexistent subexpressions is illegal. */
@@ -1931,7 +1931,7 @@ tre_compile(regex_t *preg, const tre_char_t *regex, size_t n, int cflags)
       if (errcode != REG_OK)
 	ERROR_EXIT(errcode);
 #ifdef TRE_DEBUG
-      tre_ast_print(tree);
+      tre_ast_fprint(stderr, tree);
 #endif /* TRE_DEBUG */
 
       if (tnfa->num_tags > 0)
@@ -1990,7 +1990,7 @@ tre_compile(regex_t *preg, const tre_char_t *regex, size_t n, int cflags)
     ERROR_EXIT(REG_ESPACE);
 
 #ifdef TRE_DEBUG
-  tre_ast_print(tree);
+  tre_ast_fprint(stderr, tree);
   DPRINT(("Number of states: %d\n", parse_ctx.position));
 #endif /* TRE_DEBUG */
 

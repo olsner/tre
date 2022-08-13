@@ -23,7 +23,8 @@
 
 #ifdef TRE_DEBUG
 #include <stdio.h>
-#define DPRINT(msg) do {printf msg; fflush(stdout);} while(/*CONSTCOND*/(void)0,0)
+#define DPRINT_(...) do { fprintf(stderr, __VA_ARGS__); } while(0)
+#define DPRINT(msg) do { DPRINT_ msg; } while(/*CONSTCOND*/(void)0,0)
 #else /* !TRE_DEBUG */
 #define DPRINT(msg) do { } while(/*CONSTCOND*/(void)0,0)
 #endif /* !TRE_DEBUG */
